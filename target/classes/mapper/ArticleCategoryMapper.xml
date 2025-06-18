@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hniu.mapu.mapper.ArticleCategoryMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="CategoryResultMap" type="com.hniu.mapu.pojo.entity.ArticleCategory">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="description" column="description"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <!-- 根据ID查询类别 -->
+    <select id="selectById" resultMap="CategoryResultMap">
+        SELECT id, name, description, create_time
+        FROM article_category
+        WHERE id = #{id}
+    </select>
+
+    <!-- 查询所有类别 -->
+    <select id="selectAll" resultMap="CategoryResultMap">
+        SELECT id, name, description, create_time
+        FROM article_category
+        ORDER BY create_time ASC
+    </select>
+
+    <!-- 根据名称查询类别 -->
+    <select id="selectByName" resultMap="CategoryResultMap">
+        SELECT id, name, description, create_time
+        FROM article_category
+        WHERE name = #{name}
+    </select>
+
+    <!-- 插入类别 -->
+    <insert id="insert">
+        INSERT INTO article_category (id, name, description, create_time)
+        VALUES (#{id}, #{name}, #{description}, #{createTime})
+    </insert>
+
+    <!-- 更新类别 -->
+    <update id="update">
+        UPDATE article_category
+        <set>
+            <if test="name != null">name = #{name},</if>
+            <if test="description != null">description = #{description}</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 删除类别 -->
+    <delete id="deleteById">
+        DELETE FROM article_category WHERE id = #{id}
+    </delete>
+
+    <!-- 获取类别总数 -->
+    <select id="getTotalCount" resultType="long">
+        SELECT COUNT(*) FROM article_category
+    </select>
+
+    <!-- 根据条件查询类别列表 -->
+    <select id="findByConditions" resultMap="CategoryResultMap">
+        SELECT id, name, description, create_time
+        FROM article_category
+        <where>
+            <if test="name != null and name != ''">
+                AND name LIKE CONCAT('%', #{name}, '%')
+            </if>
+            <if test="description != null and description != ''">
+                AND description LIKE CONCAT('%', #{description}, '%')
+            </if>
+        </where>
+        ORDER BY create_time ASC
+        <if test="offset != null and size != null">
+            LIMIT #{offset}, #{size}
+        </if>
+    </select>
+
+    <!-- 根据条件统计类别数量 -->
+    <select id="countByConditions" resultType="long">
+        SELECT COUNT(*) FROM article_category
+        <where>
+            <if test="name != null and name != ''">
+                AND name LIKE CONCAT('%', #{name}, '%')
+            </if>
+            <if test="description != null and description != ''">
+                AND description LIKE CONCAT('%', #{description}, '%')
+            </if>
+        </where>
+    </select>
+
+</mapper>

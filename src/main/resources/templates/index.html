@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MAPU - 文章管理系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .article-card {
+            transition: transform 0.2s;
+            border: none;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .article-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+        .article-meta {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        .search-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 60px 0;
+        }
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <div th:replace="~{fragments/navbar :: navbar}"></div>
+
+    <!-- 搜索区域 -->
+    <section class="search-section">
+        <div class="container text-center">
+            <h1 class="mb-4">发现精彩文章</h1>
+            <p class="lead mb-4">在这里找到你感兴趣的内容</p>
+            <form action="/article/search" method="get" class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="input-group input-group-lg">
+                        <input type="text" class="form-control" name="keyword" placeholder="搜索文章..." th:value="${param.keyword}">
+                        <button class="btn btn-light" type="submit">
+                            <i class="fas fa-search"></i> 搜索
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <!-- 文章列表 -->
+    <div class="container my-5">
+        <div class="row">
+            <div class="col-md-9">
+                <h2 class="mb-4">最新文章</h2>
+                <div class="row" th:if="${articles != null and !articles.isEmpty()}">
+                    <div class="col-md-6 mb-4" th:each="article : ${articles}">
+                        <div class="card article-card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <a th:href="@{/article/detail/{id}(id=${article.id})}" 
+                                       th:text="${article.title}" 
+                                       class="text-decoration-none text-dark">文章标题</a>
+                                </h5>
+                                <p class="card-text text-muted" th:text="${article.summary}">文章摘要...</p>
+                                <div class="article-meta mb-3">
+                                    <span class="me-3">
+                                        <i class="fas fa-user"></i> 
+                                        <span th:text="${article.authorName}">作者</span>
+                                    </span>
+                                    <span class="me-3">
+                                        <i class="fas fa-folder"></i> 
+                                        <span th:text="${article.categoryName}">分类</span>
+                                    </span>
+                                    <span class="me-3">
+                                        <i class="fas fa-calendar"></i> 
+                                        <span th:text="${#temporals.format(article.createTime, 'yyyy-MM-dd')}">发布时间</span>
+                                    </span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <span class="badge bg-success me-2">
+                                            <i class="fas fa-comment"></i> <span th:text="${article.commentCount}">0</span>
+                                        </span>
+                                        <span class="badge bg-warning">
+                                            <i class="fas fa-star"></i> <span th:text="${article.favoriteCount}">0</span>
+                                        </span>
+                                    </div>
+                                    <a th:href="@{/article/detail/{id}(id=${article.id})}" class="btn btn-outline-primary btn-sm">阅读更多</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 空状态 -->
+                <div class="text-center py-5" th:if="${articles == null or articles.isEmpty()}">
+                    <i class="fas fa-file-alt fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">暂无文章</h4>
+                    <p class="text-muted">还没有发布任何文章</p>
+                </div>
+
+                <!-- 分页 -->
+                <nav th:if="${pageInfo != null and pageInfo.pages > 1}">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item" th:classappend="${pageInfo.isFirstPage} ? 'disabled'">
+                            <a class="page-link" th:href="@{/(pageNum=${pageInfo.prePage})}" th:if="${!pageInfo.isFirstPage}">上一页</a>
+                            <span class="page-link" th:if="${pageInfo.isFirstPage}">上一页</span>
+                        </li>
+                        <li class="page-item" th:each="num : ${pageInfo.navigatepageNums}" 
+                            th:classappend="${num == pageInfo.pageNum} ? 'active'">
+                            <a class="page-link" th:href="@{/(pageNum=${num})}" th:text="${num}">1</a>
+                        </li>
+                        <li class="page-item" th:classappend="${pageInfo.isLastPage} ? 'disabled'">
+                            <a class="page-link" th:href="@{/(pageNum=${pageInfo.nextPage})}" th:if="${!pageInfo.isLastPage}">下一页</a>
+                            <span class="page-link" th:if="${pageInfo.isLastPage}">下一页</span>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+
+            <!-- 侧边栏 -->
+            <div class="col-md-3">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0">快速导航</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a href="/article/search" class="btn btn-outline-primary btn-sm">高级搜索</a>
+                            <a href="/article/favorites" class="btn btn-outline-success btn-sm">我的收藏</a>
+                            <a href="/category/manage" class="btn btn-outline-info btn-sm" th:if="${session.userRole != null and session.userRole == 1}">类别管理</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0">系统信息</h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text small text-muted">
+                            MAPU文章管理系统<br>
+                            版本：1.0.0<br>
+                            作者：jiujiu
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 页脚 -->
+    <div th:replace="~{fragments/footer :: footer}"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

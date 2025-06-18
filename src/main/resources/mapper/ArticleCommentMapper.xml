@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hniu.mapu.mapper.ArticleCommentMapper">
+
+	<!-- 基础结果映射 -->
+	<resultMap id="CommentResultMap" type="com.hniu.mapu.pojo.entity.ArticleComment">
+		<id property="id" column="id"/>
+		<result property="userId" column="user_id"/>
+		<result property="articleId" column="article_id"/>
+		<result property="parentId" column="parent_id"/>
+		<result property="content" column="content"/>
+		<result property="createTime" column="create_time"/>
+	</resultMap>
+
+	<!-- 详细结果映射（包含用户信息） -->
+	<resultMap id="CommentDetailResultMap" type="com.hniu.mapu.pojo.entity.ArticleComment" extends="CommentResultMap">
+		<!-- 用户信息 -->
+		<association property="user" javaType="com.hniu.mapu.pojo.entity.User">
+			<id property="id" column="user_id"/>
+			<result property="username" column="username"/>
+			<result property="nickname" column="nickname"/>
+			<result property="avatar" column="avatar"/>
+			<result property="gender" column="gender"/>
+			<result property="phone" column="phone"/>
+			<result property="email" column="email"/>
+		</association>
+	</resultMap>
+
+	<!-- 根据ID查询评论 -->
+	<select id="selectById" parameterType="string" resultMap="CommentResultMap">
+		SELECT id, user_id, article_id, parent_id, content, create_time
+		FROM article_comment
+		WHERE id = #{id}
+	</select>
+
+	<!-- 查询文章的顶级评论 -->
+	<select id="selectTopCommentsByArticleId" resultMap="CommentDetailResultMap">
+		SELECT 
+			c.id, c.user_id, c.article_id, c.parent_id, c.content, c.create_time,
+			u.username, u.nickname, u.avatar, u.gender, u.phone, u.email
+		FROM article_comment c
+		LEFT JOIN user u ON c.user_id = u.id
+		WHERE c.article_id = #{articleId} AND c.parent_id IS NULL
+		ORDER BY c.create_time ASC
+	</select>
+
+	<!-- 查询评论的子评论 -->
+	<select id="selectChildCommentsByParentId" resultMap="CommentDetailResultMap">
+		SELECT 
+			c.id, c.user_id, c.article_id, c.parent_id, c.content, c.create_time,
+			u.username, u.nickname, u.avatar, u.gender, u.phone, u.email
+		FROM article_comment c
+		LEFT JOIN user u ON c.user_id = u.id
+		WHERE c.parent_id = #{parentId}
+		ORDER BY c.create_time ASC
+	</select>
+
+	<!-- 查询文章的所有评论 -->
+	<select id="selectCommentsByArticleId" resultMap="CommentDetailResultMap">
+		SELECT 
+			c.id, c.user_id, c.article_id, c.parent_id, c.content, c.create_time,
+			u.username, u.nickname, u.avatar, u.gender, u.phone, u.email
+		FROM article_comment c
+		LEFT JOIN user u ON c.user_id = u.id
+		WHERE c.article_id = #{articleId}
+		ORDER BY c.create_time ASC
+	</select>
+
+	<!-- 插入评论 -->
+	<insert id="insert">
+		INSERT INTO article_comment (id, user_id, article_id, parent_id, content, create_time)
+		VALUES (#{id}, #{userId}, #{articleId}, #{parentId}, #{content}, #{createTime})
+	</insert>
+
+	<!-- 更新评论 -->
+	<update id="update">
+		UPDATE article_comment
+		<set>
+			<if test="content != null">content = #{content}</if>
+		</set>
+		WHERE id = #{id}
+	</update>
+
+	<!-- 删除评论 -->
+	<delete id="deleteById">
+		DELETE FROM article_comment WHERE id = #{id}
+	</delete>
+
+	<!-- 统计文章评论数 -->
+	<select id="countByArticleId" resultType="int">
+		SELECT COUNT(*) FROM article_comment WHERE article_id = #{articleId}
+	</select>
+
+	<!-- 获取评论总数 -->
+	<select id="getTotalCount" resultType="long">
+		SELECT COUNT(*) FROM article_comment
+	</select>
+
+	<!-- 根据条件查询评论列表 -->
+	<select id="findByConditions" resultMap="CommentDetailResultMap">
+		SELECT 
+			c.id, c.user_id, c.article_id, c.parent_id, c.content, c.create_time,
+			u.username, u.nickname, u.avatar, u.gender, u.phone, u.email,
+			a.title as article_title
+		FROM article_comment c
+		LEFT JOIN user u ON c.user_id = u.id
+		LEFT JOIN article a ON c.article_id = a.id
+		<where>
+			<if test="content != null and content != ''">
+				AND c.content LIKE CONCAT('%', #{content}, '%')
+			</if>
+			<if test="username != null and username != ''">
+				AND (u.username LIKE CONCAT('%', #{username}, '%') OR u.nickname LIKE CONCAT('%', #{username}, '%'))
+			</if>
+			<if test="articleTitle != null and articleTitle != ''">
+				AND a.title LIKE CONCAT('%', #{articleTitle}, '%')
+			</if>
+		</where>
+		ORDER BY c.create_time DESC
+		<if test="offset != null and size != null">
+			LIMIT #{offset}, #{size}
+		</if>
+	</select>
+
+	<!-- 根据条件统计评论数量 -->
+	<select id="countByConditions" resultType="long">
+		SELECT COUNT(*) FROM article_comment c
+		LEFT JOIN user u ON c.user_id = u.id
+		LEFT JOIN article a ON c.article_id = a.id
+		<where>
+			<if test="content != null and content != ''">
+				AND c.content LIKE CONCAT('%', #{content}, '%')
+			</if>
+			<if test="username != null and username != ''">
+				AND (u.username LIKE CONCAT('%', #{username}, '%') OR u.nickname LIKE CONCAT('%', #{username}, '%'))
+			</if>
+			<if test="articleTitle != null and articleTitle != ''">
+				AND a.title LIKE CONCAT('%', #{articleTitle}, '%')
+			</if>
+		</where>
+	</select>
+
+</mapper>

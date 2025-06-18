@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${article != null ? '编辑文章' : '发表文章'} + ' - MAPU'">编辑文章 - MAPU</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Markdown编辑器样式 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde@2.18.0/dist/easymde.min.css">
+    <style>
+        .edit-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 0;
+        }
+        .edit-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            padding: 30px;
+            margin-top: -20px;
+            position: relative;
+            z-index: 10;
+        }
+        .form-floating {
+            margin-bottom: 20px;
+        }
+        .btn-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+        }
+        .btn-gradient:hover {
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+            color: white;
+        }
+        .editor-container {
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .editor-toolbar {
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            padding: 10px 15px;
+        }
+        .toolbar-btn {
+            background: none;
+            border: none;
+            padding: 5px 10px;
+            margin-right: 5px;
+            border-radius: 5px;
+            color: #6c757d;
+            transition: all 0.2s;
+        }
+        .toolbar-btn:hover {
+            background: #e9ecef;
+            color: #495057;
+        }
+        .toolbar-btn.active {
+            background: #667eea;
+            color: white;
+        }
+        .preview-container {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            padding: 20px;
+            min-height: 400px;
+        }
+        .tag-input {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            padding: 8px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            min-height: 38px;
+        }
+        .tag-item {
+            background: #667eea;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .tag-remove {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 0;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .tag-remove:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        .tag-input input {
+            border: none;
+            outline: none;
+            flex: 1;
+            min-width: 100px;
+        }
+        .upload-area {
+            border: 2px dashed #dee2e6;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .upload-area:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+        .upload-area.dragover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+        .image-preview {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 10px;
+            margin-top: 10px;
+        }
+        .EasyMDEContainer {
+            margin-bottom: 20px;
+        }
+        .editor-split {
+            display: flex;
+            gap: 20px;
+        }
+        .editor-split .editor-pane,
+        .editor-split .preview-pane {
+            flex: 1;
+        }
+        .mode-tabs {
+            margin-bottom: 20px;
+        }
+        .mode-tabs .nav-link {
+            border-radius: 25px;
+            margin-right: 10px;
+        }
+        .save-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1050;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <div th:replace="~{fragments/navbar :: navbar}"></div>
+
+    <!-- 编辑头部 -->
+    <div class="edit-header">
+        <div class="container text-center">
+            <h1 class="display-6 fw-bold mb-3">
+                <i class="fas fa-edit me-3"></i>
+                <span th:text="${article != null ? '编辑文章' : '发表文章'}">编辑文章</span>
+            </h1>
+            <p class="lead" th:text="${article != null ? '修改您的文章内容' : '分享您的想法和见解'}">修改您的文章内容</p>
+        </div>
+    </div>
+
+    <!-- 保存状态提示 -->
+    <div id="saveStatus" class="save-status"></div>
+
+    <!-- 主要内容 -->
+    <div class="container my-4">
+        <div class="edit-container">
+            <!-- 错误提示 -->
+            <div class="alert alert-danger" th:if="${error}" th:text="${error}"></div>
+            
+            <!-- 成功提示 -->
+            <div class="alert alert-success" th:if="${success}" th:text="${success}"></div>
+            
+            <form th:action="${article != null ? '/article/update/' + article.id : '/article/create'}" 
+                  method="post" id="articleForm">
+                
+                <!-- 隐藏字段 -->
+                <input type="hidden" name="articleId" th:value="${article?.id}" th:if="${article != null}">
+                
+                <!-- 基本信息 -->
+                <div class="row mb-4">
+                    <div class="col-md-8">
+                        <div class="form-floating">
+                            <input type="text" class="form-control" id="title" name="title" 
+                                   placeholder="请输入文章标题" required 
+                                   th:value="${article?.title}" maxlength="100">
+                            <label for="title">
+                                <i class="fas fa-heading"></i> 文章标题 *
+                            </label>
+                            <div class="form-text">标题长度不超过100个字符</div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="form-floating">
+                            <select class="form-select" id="categoryId" name="categoryId" required>
+                                <option value="">请选择分类</option>
+                                <option th:each="category : ${categories}" 
+                                        th:value="${category.id}" 
+                                        th:text="${category.name}"
+                                        th:selected="${article != null and article.categoryId != null and article.categoryId == category.id}">分类名称</option>
+                            </select>
+                            <label for="categoryId">
+                                <i class="fas fa-folder"></i> 文章分类 *
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 文章摘要 -->
+                <div class="form-floating mb-4">
+                    <textarea class="form-control" id="summary" name="summary" 
+                              style="height: 80px" placeholder="请输入文章摘要（可选）" 
+                              maxlength="300" th:text="${article?.summary}"></textarea>
+                    <label for="summary">
+                        <i class="fas fa-align-left"></i> 文章摘要
+                    </label>
+                    <div class="form-text">摘要长度不超过300个字符，留空将自动从内容中提取</div>
+                </div>
+                
+
+                
+                <!-- 编辑模式选择 -->
+                <div class="mode-tabs">
+                    <ul class="nav nav-pills" id="editorTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="edit-tab" data-bs-toggle="pill" 
+                                    data-bs-target="#edit-mode" type="button" role="tab">
+                                <i class="fas fa-edit"></i> 编辑模式
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="preview-tab" data-bs-toggle="pill" 
+                                    data-bs-target="#preview-mode" type="button" role="tab">
+                                <i class="fas fa-eye"></i> 预览模式
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="split-tab" data-bs-toggle="pill" 
+                                    data-bs-target="#split-mode" type="button" role="tab">
+                                <i class="fas fa-columns"></i> 分屏模式
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- 编辑器内容 -->
+                <div class="tab-content" id="editorTabsContent">
+                    <!-- 编辑模式 -->
+                    <div class="tab-pane fade show active" id="edit-mode" role="tabpanel">
+                        <div class="editor-toolbar">
+                            <button type="button" class="toolbar-btn" id="uploadImageBtn">
+                                <i class="fas fa-image"></i>插入图片
+                            </button>
+                            <input type="file" id="imageUpload" accept="image/*" style="display: none">
+                        </div>
+                            <textarea class="form-control" id="content" name="content"
+                                      style="height: 500px" placeholder="请输入文章内容"
+                                      required th:text="${article?.content}"></textarea>
+                            <label for="content">
+                                <i class="fas fa-file-alt"></i>
+                            </label>
+<!--                        </div>-->
+                    </div>
+                    <!-- 预览模式 -->
+                    <div class="tab-pane fade" id="preview-mode" role="tabpanel">
+                        <div class="preview-container" id="previewContent">
+                            <div class="text-center text-muted py-5">
+                                <i class="fas fa-eye fa-3x mb-3"></i>
+                                <h5>文章预览</h5>
+                                <p>在编辑模式中输入内容后，这里会显示预览效果</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 分屏模式 -->
+                    <div class="tab-pane fade" id="split-mode" role="tabpanel">
+                        <div class="editor-split">
+                            <div class="editor-pane">
+                                <h6 class="mb-3">编辑区域</h6>
+                                <textarea class="form-control" id="splitContent" 
+                                          style="height: 500px" placeholder="请输入文章内容"></textarea>
+                            </div>
+                            <div class="preview-pane">
+                                <h6 class="mb-3">实时预览</h6>
+                                <div class="preview-container" id="splitPreview" style="height: 500px; overflow-y: auto;">
+                                    <div class="text-center text-muted py-5">
+                                        <i class="fas fa-eye fa-2x mb-3"></i>
+                                        <p>实时预览区域</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+
+                
+                <!-- 发布设置 -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <select class="form-select" id="status" name="status">
+                                <option value="1" th:selected="${article?.status == 1}">立即发布</option>
+                                <option value="0" th:selected="${article?.status == 0}">保存草稿</option>
+                            </select>
+                            <label for="status">
+                                <i class="fas fa-globe"></i> 发布状态
+                            </label>
+                        </div>
+                    </div>
+<!--
+                    <div class="col-md-6">
+                        <div class="form-check form-switch mt-3">
+                            <input class="form-check-input" type="checkbox" id="allowComments" 
+                                   name="allowComments" th:checked="${article?.allowComments != false}">
+                            <label class="form-check-label" for="allowComments">
+                                <i class="fas fa-comments"></i> 允许评论
+                            </label>
+                        </div>
+                    </div>-->
+                </div>
+                
+                <!-- 操作按钮 -->
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <a href="/" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left"></i> 返回首页
+                        </a>
+                    </div>
+                    
+                    <div>
+                        <button type="button" class="btn btn-outline-secondary me-2" onclick="resetForm()">
+                            <i class="fas fa-undo"></i> 重置
+                        </button>
+                        <button type="submit" class="btn btn-gradient" id="submitBtn">
+                            <i class="fas fa-save"></i> 
+                            <span id="submitText" th:text="${article != null ? '更新文章' : '发表文章'}">发表文章</span>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 页脚 -->
+    <!-- 页脚 -->
+    <div th:replace="~{fragments/footer :: footer}"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Markdown解析器 -->
+    <script src="https://cdn.jsdelivr.net/npm/marked@4.3.0/marked.min.js"></script>
+    <script>
+        let autoSaveTimer;
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 同步分屏模式的内容
+            syncSplitContent();
+            
+            // 初始化按钮状态
+            updateSubmitButton();
+            
+            // 监听状态变化
+            document.getElementById('status').addEventListener('change', updateSubmitButton);
+        });
+
+        // 内容预览
+        function updatePreview() {
+            const content = document.getElementById('content').value;
+            const previewContent = document.getElementById('previewContent');
+            const splitPreview = document.getElementById('splitPreview');
+            
+            if (content.trim()) {
+                const html = marked.parse(content);
+                previewContent.innerHTML = html;
+                if (splitPreview) {
+                    splitPreview.innerHTML = html;
+                }
+            } else {
+                const emptyMessage = `
+                    <div class="text-center text-muted py-5">
+                        <i class="fas fa-eye fa-3x mb-3"></i>
+                        <h5>文章预览</h5>
+                        <p>在编辑模式中输入内容后，这里会显示预览效果</p>
+                    </div>
+                `;
+                previewContent.innerHTML = emptyMessage;
+                if (splitPreview) {
+                    splitPreview.innerHTML = emptyMessage;
+                }
+            }
+        }
+        
+        // 同步分屏模式内容
+        function syncSplitContent() {
+            const mainContent = document.getElementById('content');
+            const splitContent = document.getElementById('splitContent');
+            
+            // 主编辑器内容变化时同步到分屏
+            mainContent.addEventListener('input', function() {
+                splitContent.value = this.value;
+                updatePreview();
+            });
+            
+            // 分屏编辑器内容变化时同步到主编辑器
+            splitContent.addEventListener('input', function() {
+                mainContent.value = this.value;
+                updatePreview();
+            });
+        }
+        // 标签页切换事件
+        document.querySelectorAll('#editorTabs button').forEach(button => {
+            button.addEventListener('shown.bs.tab', function(e) {
+                if (e.target.id === 'preview-tab' || e.target.id === 'split-tab') {
+                    updatePreview();
+                }
+                
+                if (e.target.id === 'split-tab') {
+                    // 同步内容到分屏编辑器
+                    const mainContent = document.getElementById('content').value;
+                    document.getElementById('splitContent').value = mainContent;
+                }
+            });
+        });
+        // 更新按钮文本
+        function updateSubmitButton() {
+            const status = document.getElementById('status').value;
+            const submitText = document.getElementById('submitText');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            if (status === '0') {
+                submitText.textContent = '保存草稿';
+                submitBtn.className = 'btn btn-outline-primary';
+            } else {
+                const isUpdate = document.querySelector('input[name="articleId"]');
+                submitText.textContent = isUpdate ? '更新文章' : '发表文章';
+                submitBtn.className = 'btn btn-gradient';
+            }
+        }
+        // 显示保存状态
+        function showSaveStatus(message, type) {
+            const statusDiv = document.getElementById('saveStatus');
+            statusDiv.innerHTML = `
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            // 3秒后自动隐藏
+            setTimeout(() => {
+                const alert = statusDiv.querySelector('.alert');
+                if (alert) {
+                    alert.remove();
+                }
+            }, 3000);
+        }
+        // 重置表单
+        function resetForm() {
+            if (!confirm('确定要重置表单吗？所有未保存的内容将丢失！')) {
+                return;
+            }
+            
+            document.getElementById('articleForm').reset();
+            updatePreview();
+        }
+        // 表单提交处理
+        document.getElementById('articleForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const title = document.getElementById('title').value.trim();
+            const content = document.getElementById('content').value.trim();
+            const categoryId = document.getElementById('categoryId').value;
+            
+            if (!title) {
+                alert('请输入文章标题');
+                return;
+            }
+            if (!content) {
+                alert('请输入文章内容');
+                return;
+            }
+            if (!categoryId) {
+                alert('请选择文章分类');
+                return;
+            }
+            // 构建文章数据
+            const articleData = {
+                title: title,
+                summary: document.getElementById('summary').value.trim(),
+                content: content,
+                categoryId: categoryId,
+                status: document.getElementById('status').value,
+                //allowComments: document.getElementById('allowComments').checked ? 1 : 0
+            };
+            // 判断是创建还是更新
+            const isUpdate = document.querySelector('input[name="articleId"]');
+            const url = isUpdate ? `/article/${isUpdate.value}` : '/article/create';
+            const method = isUpdate ? 'PUT' : 'POST';
+            // 提交数据
+            fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(articleData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 200 && data.data) {
+                    alert(isUpdate ? '文章更新成功' : '文章发布成功');
+                    // 跳转到文章详情页
+                    window.location.href = '/article/detail/' + data.data;
+                } else {
+                    alert(data.message || '操作失败');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('提交失败，请重试');
+            });
+        });
+        // 图片上传处理逻辑
+        document.getElementById('uploadImageBtn').addEventListener('click',function (){
+            document.getElementById('imageUpload').click();
+        })
+        document.getElementById('imageUpload').addEventListener('change',async function (e){
+            const file=e.target.files[0];
+            if (!file) return;
+            showSaveStatus('图片上传中....','info');
+            try{
+                let fileread = new FileReader()
+                fileread.readAsDataURL(file)
+                fileread.onload = (res) => {
+                    const textarea=document.getElementById('content');
+                    const startPos=textarea.selectionStart;
+                    const endPos=textarea.selectionEnd;
+                    const imageMarkdown =`<img src="${res.target.result}" />`;
+
+                    textarea.value=textarea.value.substring(0,startPos)+imageMarkdown+textarea.value.substring(endPos);
+                    const newPos=startPos+imageMarkdown.length;
+                    textarea.selectionStart=textarea.selectionEnd=newPos;
+                    showSaveStatus('图片上传成功','success');
+                }
+            }
+            catch (error){
+                console.log('上传错误：'+error);
+                showSaveStatus('图片上传失败','danger');
+            }
+            e.target.value='';
+        });
+    </script>
+</body>
+</html>
