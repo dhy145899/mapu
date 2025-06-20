@@ -108,6 +108,13 @@ public interface ArticleService {
 	 * @return 文章数量
 	 */
 	long countByConditions(java.util.Map<String, Object> params);
+
+	/**
+	 * 根据类别ID统计文章数量
+	 * @param categoryId 类别ID
+	 * @return 文章数量
+	 */
+	long countByCategoryId(String categoryId);
 	
 	/**
 	 * 批量更新文章状态
@@ -123,5 +130,12 @@ public interface ArticleService {
 	 * @return 删除结果
 	 */
 	boolean batchDelete(List<String> articleIds);
+	
+	/**
+	 * 根据ID查询文章
+	 * @param id 文章ID
+	 * @return 文章信息
+	 */
+	Article getArticleById(String id);
 
 }

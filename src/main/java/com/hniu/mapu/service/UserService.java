@@ -91,9 +91,45 @@ public interface UserService {
 	List<User> findByConditions(Map<String, Object> params);
 	
 	/**
-	 * 根据条件统计用户数量
-	 * @param params 查询参数
-	 * @return 用户数量
-	 */
-	long countByConditions(Map<String, Object> params);
+ * 根据条件统计用户数量
+ * @param params 查询参数
+ * @return 用户数量
+ */
+long countByConditions(Map<String, Object> params);
+
+/**
+ * 根据ID查找用户
+ * @param id 用户ID
+ * @return 用户信息
+ */
+User findById(String id);
+
+/**
+ * 根据用户名查找用户
+ * @param username 用户名
+ * @return 用户信息
+ */
+User findByUsername(String username);
+
+/**
+ * 创建用户
+ * @param user 用户信息
+ * @return 创建结果
+ */
+boolean createUser(User user);
+
+/**
+ * 批量更新用户状态
+ * @param userIds 用户ID列表
+ * @param status 状态值
+ * @return 更新结果
+ */
+boolean batchUpdateUserStatus(List<String> userIds, Integer status);
+
+/**
+ * 批量删除用户
+ * @param userIds 用户ID列表
+ * @return 删除结果
+ */
+boolean batchDeleteUsers(List<String> userIds);
 }

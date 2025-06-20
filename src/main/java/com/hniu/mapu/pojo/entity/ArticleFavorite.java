@@ -44,4 +44,20 @@ public class ArticleFavorite {
 	 * 分类信息
 	 */
 	private ArticleCategory category;
+	
+	// 管理端显示用的冗余字段
+	/**
+	 * 收藏用户名（冗余字段，用于管理端显示）
+	 */
+	private String username;
+	
+	/**
+	 * 文章标题（冗余字段，用于管理端显示）
+	 */
+	private String articleTitle;
+	
+	/**
+	 * 文章作者（冗余字段，用于管理端显示）
+	 */
+	private String articleAuthor;
 }

@@ -85,16 +85,10 @@
                                         <td th:text="${favorite.articleAuthor}"></td>
                                         <td th:text="${#temporals.format(favorite.createTime, 'yyyy-MM-dd HH:mm')}"></td>
                                         <td>
-                                            <div class="btn-group btn-group-sm">
-                                                <button class="btn btn-outline-info" onclick="viewFavorite(this)" th:data-id="${favorite.id}"
-                                                        title="查看">
-                                                    <i class="bi bi-eye"></i>
-                                                </button>
-                                                <button class="btn btn-outline-danger" onclick="deleteFavorite(this)" th:data-id="${favorite.id}"
-                                                        title="删除">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            </div>
+                                            <button class="btn btn-outline-danger btn-sm" onclick="deleteFavorite(this)" th:data-id="${favorite.id}"
+                                                    title="删除">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
                                         </td>
                                     </tr>
                                 </tbody>
@@ -129,43 +123,7 @@
         </div>
     </div>
     
-    <!-- 查看收藏模态框 -->
-    <div class="modal fade" id="viewFavoriteModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">查看收藏详情</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">收藏用户</label>
-                        <div class="form-control-plaintext" id="viewUsername"></div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">文章标题</label>
-                        <div class="form-control-plaintext" id="viewArticleTitle"></div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">文章作者</label>
-                        <div class="form-control-plaintext" id="viewArticleAuthor"></div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">文章简介</label>
-                        <div class="border p-3" id="viewArticleSummary"></div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">收藏时间</label>
-                        <div class="form-control-plaintext" id="viewCreateTime"></div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
-                    <button type="button" class="btn btn-primary" id="viewArticleBtn">查看文章</button>
-                </div>
-            </div>
-        </div>
-    </div>
+
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
@@ -205,7 +163,7 @@
             if (favoriteIds.length === 0) return;
             
             if (confirm(`确定要删除选中的 ${favoriteIds.length} 条收藏记录吗？此操作不可恢复！`)) {
-                fetch('/admin/favorites/batch-delete', {
+                fetch('/admin/favorites/batchDelete', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify(favoriteIds)
@@ -220,40 +178,13 @@
             }
         }
         
-        // 查看收藏
-        function viewFavorite(button) {
-            const favoriteId = button.getAttribute('data-id');
-            fetch(`/admin/favorites/${favoriteId}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.code === 200) {
-                        const favorite = data.data;
-                        document.getElementById('viewUsername').textContent = favorite.username;
-                        document.getElementById('viewArticleTitle').textContent = favorite.articleTitle;
-                        document.getElementById('viewArticleAuthor').textContent = favorite.articleAuthor;
-                        document.getElementById('viewArticleSummary').textContent = favorite.articleSummary || '暂无简介';
-                        document.getElementById('viewCreateTime').textContent = favorite.createTime;
-                        
-                        // 设置查看文章按钮
-                        const viewArticleBtn = document.getElementById('viewArticleBtn');
-                        viewArticleBtn.onclick = function() {
-                            window.open(`/article/${favorite.articleId}`, '_blank');
-                        };
-                        
-                        const modal = new bootstrap.Modal(document.getElementById('viewFavoriteModal'));
-                        modal.show();
-                    } else {
-                        alert(data.message);
-                    }
-                });
-        }
         
         // 删除收藏
         function deleteFavorite(button) {
             const favoriteId = button.getAttribute('data-id');
             if (confirm('确定要删除该收藏记录吗？此操作不可恢复！')) {
-                fetch(`/admin/favorites/${favoriteId}`, {
-                    method: 'DELETE'
+                fetch(`/admin/favorites/delete/${favoriteId}`, {
+                    method: 'POST'
                 }).then(response => response.json())
                 .then(data => {
                     if (data.code === 200) {

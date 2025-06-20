@@ -63,9 +63,23 @@ public interface ArticleFavoriteMapper {
 	List<ArticleFavorite> findByConditions(java.util.Map<String, Object> params);
 	
 	/**
-	 * 根据条件统计收藏数量
-	 * @param params 查询参数
-	 * @return 收藏数量
-	 */
-	long countByConditions(java.util.Map<String, Object> params);
+     * 根据条件统计收藏数量
+     * @param params 查询参数
+     * @return 收藏数量
+     */
+    long countByConditions(java.util.Map<String, Object> params);
+    
+    /**
+     * 根据ID删除收藏记录
+     * @param id 收藏ID
+     * @return 影响行数
+     */
+    int deleteById(@Param("id") String id);
+    
+    /**
+     * 批量删除收藏记录
+     * @param favoriteIds 收藏ID列表
+     * @return 影响行数
+     */
+    int batchDeleteByIds(@Param("favoriteIds") List<String> favoriteIds);
 }

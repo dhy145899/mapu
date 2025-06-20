@@ -55,11 +55,32 @@ public interface ArticleCommentMapper {
 	int update(ArticleComment comment);
 	
 	/**
+	 * 根据ID更新评论
+	 * @param comment 评论信息
+	 * @return 影响行数
+	 */
+	int updateById(ArticleComment comment);
+	
+	/**
 	 * 删除评论
 	 * @param id 评论ID
 	 * @return 影响行数
 	 */
 	int deleteById(@Param("id") String id);
+	
+	/**
+	 * 批量删除评论
+	 * @param commentIds 评论ID列表
+	 * @return 影响行数
+	 */
+	int batchDeleteByIds(@Param("commentIds") List<String> commentIds);
+	
+	/**
+	 * 根据ID查询评论详情（包含用户名和文章标题）
+	 * @param id 评论ID
+	 * @return 评论详情
+	 */
+	ArticleComment selectByIdWithDetails(@Param("id") String id);
 	
 	/**
 	 * 统计文章评论数

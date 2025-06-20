@@ -40,6 +40,17 @@ public class ArticleComment {
 	 */
 	private LocalDateTime createTime;
 	
+	// 扩展字段（用于管理端显示）
+	/**
+	 * 用户名（冗余字段，用于管理端显示）
+	 */
+	private String username;
+	
+	/**
+	 * 文章标题（冗余字段，用于管理端显示）
+	 */
+	private String articleTitle;
+	
 	// 关联对象
 	/**
 	 * 评论用户信息

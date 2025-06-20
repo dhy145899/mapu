@@ -345,10 +345,13 @@
 			<if test="status != null">
 				AND a.status = #{status}
 			</if>
+			<if test="categoryId != null and categoryId != ''">
+				AND a.category_id = #{categoryId}
+			</if>
 		</where>
 		ORDER BY a.create_time DESC
 		<if test="offset != null and size != null">
-			LIMIT #{offset}, #{size}
+			LIMIT #{size} OFFSET #{offset}
 		</if>
 	</select>
 
@@ -369,6 +372,9 @@
 			</if>
 			<if test="status != null">
 				AND a.status = #{status}
+			</if>
+			<if test="categoryId != null and categoryId != ''">
+				AND a.category_id = #{categoryId}
 			</if>
 		</where>
 	</select>

@@ -176,21 +176,17 @@
             formData.append('username', username);
             formData.append('password', password);
             
-            // 发送登录请求
-            fetch('/user/login', {
+            // 发送管理员登录请求
+            fetch('/admin/login', {
                 method: 'POST',
                 body: formData
             })
             .then(response => response.json())
             .then(data => {
                 if (data.code === 200) {
-                    // 登录成功，检查是否为管理员
-                    if (data.data === '/admin') {
-                        alert(data.message);
-                        window.location.href = '/admin';
-                    } else {
-                        alert('此账号不是管理员账号，请使用管理员账号登录');
-                    }
+                    // 管理员登录成功
+                    alert(data.message);
+                    window.location.href = '/admin';
                 } else {
                     // 登录失败，显示错误信息
                     alert(data.message || '登录失败');

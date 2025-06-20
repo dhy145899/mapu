@@ -309,16 +309,15 @@
             e.preventDefault();
             const formData = new FormData(this);
             const data = Object.fromEntries(formData);
-            const commentId = data.id;
-            delete data.id;
             
-            fetch(`/admin/comments/${commentId}`, {
-                method: 'PUT',
+            fetch('/admin/comments/update', {
+                method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(data)
             }).then(response => response.json())
             .then(data => {
                 if (data.code === 200) {
+                    bootstrap.Modal.getInstance(document.getElementById('editCommentModal')).hide();
                     location.reload();
                 } else {
                     alert(data.message);

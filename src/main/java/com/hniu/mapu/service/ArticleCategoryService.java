@@ -84,4 +84,11 @@ public interface ArticleCategoryService {
 	 * @return 类别数量
 	 */
 	long countByConditions(java.util.Map<String, Object> params);
+	
+	/**
+	 * 批量删除类别
+	 * @param categoryIds 类别ID列表
+	 * @return 删除结果
+	 */
+	boolean batchDeleteCategories(List<String> categoryIds);
 }

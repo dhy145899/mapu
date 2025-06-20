@@ -41,6 +41,17 @@ public class ArticleCommentServiceImpl implements ArticleCommentService {
 	}
 	
 	/**
+	 * 根据ID获取评论
+	 * @param id 评论ID
+	 * @return 评论信息
+	 */
+	@Override
+	public ArticleComment getCommentById(String id) {
+		log.info("根据ID获取评论，评论ID：{}", id);
+		return commentMapper.selectByIdWithDetails(id);
+	}
+	
+	/**
 	 * 添加评论
 	 * @param comment 评论信息
 	 * @return 添加结果
@@ -64,6 +75,38 @@ public class ArticleCommentServiceImpl implements ArticleCommentService {
 	public boolean deleteComment(String id) {
 		log.info("删除评论，评论ID：{}", id);
 		return commentMapper.deleteById(id) > 0;
+	}
+	
+	/**
+	 * 更新评论
+	 * @param comment 评论信息
+	 * @return 更新结果
+	 */
+	@Override
+	public boolean updateComment(ArticleComment comment) {
+		log.info("更新评论，评论ID：{}", comment.getId());
+		return commentMapper.updateById(comment) > 0;
+	}
+	
+	/**
+	 * 批量删除评论
+	 * @param commentIds 评论ID列表
+	 * @return 删除结果
+	 */
+	@Override
+	public boolean batchDeleteComments(List<String> commentIds) {
+		log.info("批量删除评论，数量：{}", commentIds.size());
+		
+		if (commentIds == null || commentIds.isEmpty()) {
+			return false;
+		}
+		
+		try {
+			return commentMapper.batchDeleteByIds(commentIds) > 0;
+		} catch (Exception e) {
+			log.error("批量删除评论失败", e);
+			return false;
+		}
 	}
 	
 	/**

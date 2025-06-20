@@ -33,44 +33,6 @@ public class AdminArticleController {
     private ArticleCategoryService categoryService;
 
     /**
-     * 获取文章详情
-     * @param id 文章ID
-     * @param session 会话
-     * @return 文章详情
-     */
-    @GetMapping("/{id}")
-    public ResponseEntity<?> getArticle(@PathVariable String id, HttpSession session) {
-        try {
-            // 检查管理员权限
-            Integer userRole = (Integer) session.getAttribute("userRole");
-            if (userRole == null || userRole != 1) {
-                return ResponseEntity.status(403).body(Map.of("success", false, "message", "无权限访问"));
-            }
-            
-            String userId = (String) session.getAttribute("userId");
-            ArticleVo article = articleService.getArticleDetail(id, userId);
-            
-            if (article == null) {
-                return ResponseEntity.status(404).body(Map.of("success", false, "message", "文章不存在"));
-            }
-            
-            // 获取所有分类
-            List<ArticleCategory> categories = categoryService.getAllCategories();
-            
-            Map<String, Object> result = new HashMap<>();
-            result.put("success", true);
-            result.put("article", article);
-            result.put("categories", categories);
-            
-            return ResponseEntity.ok(result);
-            
-        } catch (Exception e) {
-            log.error("获取文章详情失败", e);
-            return ResponseEntity.status(500).body(Map.of("success", false, "message", "获取文章详情失败"));
-        }
-    }
-
-    /**
      * 更新文章
      * @param id 文章ID
      * @param article 文章信息
@@ -198,6 +160,40 @@ public class AdminArticleController {
     }
 
     /**
+     * 批量发布文章
+     * @param articleIds 文章ID列表
+     * @param session 会话
+     * @return 操作结果
+     */
+    @PostMapping("/batch-publish")
+    public ResponseEntity<?> batchPublish(@RequestBody List<String> articleIds, HttpSession session) {
+        try {
+            // 检查管理员权限
+            Integer userRole = (Integer) session.getAttribute("userRole");
+            if (userRole == null || userRole != 1) {
+                return ResponseEntity.status(403).body(Map.of("code", 403, "message", "无权限访问"));
+            }
+            
+            if (articleIds == null || articleIds.isEmpty()) {
+                return ResponseEntity.status(400).body(Map.of("code", 400, "message", "请选择要操作的文章"));
+            }
+            
+            // 批量更新文章状态为已发布(1)
+            boolean success = articleService.batchUpdateStatus(articleIds, 1);
+            
+            if (success) {
+                return ResponseEntity.ok(Map.of("code", 200, "message", "批量发布成功"));
+            } else {
+                return ResponseEntity.status(400).body(Map.of("code", 400, "message", "批量发布失败"));
+            }
+            
+        } catch (Exception e) {
+            log.error("批量发布失败", e);
+            return ResponseEntity.status(500).body(Map.of("code", 500, "message", "批量发布失败"));
+        }
+    }
+
+    /**
      * 将单个文章改成草稿
      * @param id 文章ID
      * @param session 会话
@@ -224,6 +220,36 @@ public class AdminArticleController {
         } catch (Exception e) {
             log.error("改成草稿失败", e);
             return ResponseEntity.status(500).body(Map.of("code", 500, "message", "改成草稿失败"));
+        }
+    }
+
+    /**
+     * 发布单个文章
+     * @param id 文章ID
+     * @param session 会话
+     * @return 操作结果
+     */
+    @PutMapping("/{id}/publish")
+    public ResponseEntity<?> publish(@PathVariable String id, HttpSession session) {
+        try {
+            // 检查管理员权限
+            Integer userRole = (Integer) session.getAttribute("userRole");
+            if (userRole == null || userRole != 1) {
+                return ResponseEntity.status(403).body(Map.of("code", 403, "message", "无权限访问"));
+            }
+            
+            // 更新文章状态为已发布(1)
+            boolean success = articleService.updateArticleStatus(id, 1);
+            
+            if (success) {
+                return ResponseEntity.ok(Map.of("code", 200, "message", "发布成功"));
+            } else {
+                return ResponseEntity.status(400).body(Map.of("code", 400, "message", "发布失败"));
+            }
+            
+        } catch (Exception e) {
+            log.error("发布失败", e);
+            return ResponseEntity.status(500).body(Map.of("code", 500, "message", "发布失败"));
         }
     }
 }

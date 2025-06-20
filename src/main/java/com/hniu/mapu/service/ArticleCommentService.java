@@ -17,6 +17,13 @@ public interface ArticleCommentService {
 	List<ArticleComment> getCommentsByArticleId(String articleId);
 	
 	/**
+	 * 根据ID获取评论
+	 * @param id 评论ID
+	 * @return 评论信息
+	 */
+	ArticleComment getCommentById(String id);
+	
+	/**
 	 * 添加评论
 	 * @param comment 评论信息
 	 * @return 添加结果
@@ -29,6 +36,20 @@ public interface ArticleCommentService {
 	 * @return 删除结果
 	 */
 	boolean deleteComment(String id);
+	
+	/**
+	 * 更新评论
+	 * @param comment 评论信息
+	 * @return 更新结果
+	 */
+	boolean updateComment(ArticleComment comment);
+	
+	/**
+	 * 批量删除评论
+	 * @param commentIds 评论ID列表
+	 * @return 删除结果
+	 */
+	boolean batchDeleteComments(List<String> commentIds);
 	
 	/**
 	 * 构建评论树形结构

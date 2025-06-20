@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -195,5 +196,103 @@ public class UserServiceImpl implements UserService {
 	public long countByConditions(java.util.Map<String, Object> params) {
 		log.info("根据条件统计用户数量，参数：{}", params);
 		return userMapper.countByConditions(params);
+	}
+	
+	/**
+	 * 根据ID查找用户
+	 * @param id 用户ID
+	 * @return 用户信息
+	 */
+	@Override
+	public User findById(String id) {
+		log.info("根据ID查找用户，用户ID：{}", id);
+		return userMapper.selectById(id);
+	}
+	
+	/**
+	 * 根据用户名查找用户
+	 * @param username 用户名
+	 * @return 用户信息
+	 */
+	@Override
+	public User findByUsername(String username) {
+		log.info("根据用户名查找用户，用户名：{}", username);
+		return userMapper.selectByUsername(username);
+	}
+	
+	/**
+	 * 创建用户
+	 * @param user 用户信息
+	 * @return 创建结果
+	 */
+	@Override
+	public boolean createUser(User user) {
+		log.info("创建用户，用户名：{}", user.getUsername());
+		
+		// 加密密码
+		if (user.getPassword() != null) {
+			user.setPassword(PasswordEncodeUtils.encoder(user.getPassword()));
+		}
+		
+		return userMapper.insert(user) > 0;
+	}
+	
+	/**
+	 * 批量更新用户状态
+	 * @param userIds 用户ID列表
+	 * @param status 状态值
+	 * @return 更新结果
+	 */
+	@Override
+	public boolean batchUpdateUserStatus(List<String> userIds, Integer status) {
+		log.info("批量更新用户状态，用户数量：{}，状态：{}", userIds.size(), status);
+		
+		if (userIds == null || userIds.isEmpty()) {
+			return false;
+		}
+		
+		// 过滤掉管理员用户
+		List<String> filteredUserIds = new java.util.ArrayList<>();
+		for (String userId : userIds) {
+			User user = userMapper.selectById(userId);
+			if (user != null && (user.getRole() == null || user.getRole() != 1)) {
+				filteredUserIds.add(userId);
+			}
+		}
+		
+		if (filteredUserIds.isEmpty()) {
+			return false;
+		}
+		
+		return userMapper.batchUpdateStatus(filteredUserIds, status) > 0;
+	}
+	
+	/**
+	 * 批量删除用户
+	 * @param userIds 用户ID列表
+	 * @return 删除结果
+	 */
+	@Override
+	public boolean batchDeleteUsers(List<String> userIds) {
+		log.info("批量删除用户，用户数量：{}", userIds.size());
+		
+		if (userIds == null || userIds.isEmpty()) {
+			return false;
+		}
+		
+		// 过滤掉管理员用户
+		List<String> filteredUserIds = new java.util.ArrayList<>();
+		for (String userId : userIds) {
+			User user = userMapper.selectById(userId);
+			if (user != null && (user.getRole() == null || user.getRole() != 1)) {
+				filteredUserIds.add(userId);
+			}
+		}
+		
+		if (filteredUserIds.isEmpty()) {
+			return false;
+		}
+		
+		return userMapper.batchDelete(filteredUserIds) > 0;
 	}
 }

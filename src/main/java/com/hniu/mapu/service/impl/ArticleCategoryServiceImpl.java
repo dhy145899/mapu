@@ -146,4 +146,27 @@ public class ArticleCategoryServiceImpl implements ArticleCategoryService {
 		log.info("根据条件统计类别数量，参数：{}", params);
 		return categoryMapper.countByConditions(params);
 	}
+	
+	/**
+	 * 批量删除类别
+	 * @param categoryIds 类别ID列表
+	 * @return 删除结果
+	 */
+	@Override
+	@Transactional
+	public boolean batchDeleteCategories(List<String> categoryIds) {
+		log.info("批量删除类别，数量：{}", categoryIds.size());
+		
+		if (categoryIds == null || categoryIds.isEmpty()) {
+			return false;
+		}
+		
+		try {
+			int deletedCount = categoryMapper.batchDeleteByIds(categoryIds);
+			return deletedCount > 0;
+		} catch (Exception e) {
+			log.error("批量删除类别失败", e);
+			throw new RuntimeException("批量删除类别失败", e);
+		}
+	}
 }

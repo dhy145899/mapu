@@ -11,6 +11,13 @@
 		<result column="create_time" property="createTime" />
 	</resultMap>
 
+	<!-- 管理端结果映射（包含冗余字段） -->
+	<resultMap id="FavoriteAdminResultMap" type="com.hniu.mapu.pojo.entity.ArticleFavorite" extends="ArticleFavoriteResultMap">
+		<result property="username" column="favorite_username"/>
+		<result property="articleTitle" column="article_title"/>
+		<result property="articleAuthor" column="author_username"/>
+	</resultMap>
+
 	<!-- 详细结果映射（包含文章信息） -->
 	<resultMap id="FavoriteDetailResultMap" type="com.hniu.mapu.pojo.entity.ArticleFavorite" extends="ArticleFavoriteResultMap">
 		<!-- 文章信息 -->
@@ -87,7 +94,7 @@
 	</select>
 
 	<!-- 根据条件查询收藏列表 -->
-	<select id="findByConditions" resultMap="FavoriteDetailResultMap">
+	<select id="findByConditions" resultMap="FavoriteAdminResultMap">
 		SELECT 
 			f.id, f.user_id, f.article_id, f.create_time,
 			a.id as article_id, a.title as article_title, a.summary as article_summary, a.content as article_content,
@@ -108,6 +115,9 @@
 			<if test="articleTitle != null and articleTitle != ''">
 				AND a.title LIKE CONCAT('%', #{articleTitle}, '%')
 			</if>
+			<if test="articleAuthor != null and articleAuthor != ''">
+				AND (u.username LIKE CONCAT('%', #{articleAuthor}, '%') OR u.nickname LIKE CONCAT('%', #{articleAuthor}, '%'))
+			</if>
 		</where>
 		ORDER BY f.create_time DESC
 		<if test="offset != null and size != null">
@@ -116,18 +126,36 @@
 	</select>
 
 	<!-- 根据条件统计收藏数量 -->
-	<select id="countByConditions" resultType="long">
-		SELECT COUNT(*) FROM article_favorite f
-		LEFT JOIN article a ON f.article_id = a.id
-		LEFT JOIN user fu ON f.user_id = fu.id
-		<where>
-			<if test="username != null and username != ''">
-				AND (fu.username LIKE CONCAT('%', #{username}, '%') OR fu.nickname LIKE CONCAT('%', #{username}, '%'))
-			</if>
-			<if test="articleTitle != null and articleTitle != ''">
-				AND a.title LIKE CONCAT('%', #{articleTitle}, '%')
-			</if>
-		</where>
-	</select>
+    <select id="countByConditions" resultType="long">
+        SELECT COUNT(*) FROM article_favorite f
+        LEFT JOIN article a ON f.article_id = a.id
+        LEFT JOIN user u ON a.user_id = u.id
+        LEFT JOIN user fu ON f.user_id = fu.id
+        <where>
+            <if test="username != null and username != ''">
+                AND (fu.username LIKE CONCAT('%', #{username}, '%') OR fu.nickname LIKE CONCAT('%', #{username}, '%'))
+            </if>
+            <if test="articleTitle != null and articleTitle != ''">
+                AND a.title LIKE CONCAT('%', #{articleTitle}, '%')
+            </if>
+            <if test="articleAuthor != null and articleAuthor != ''">
+                AND (u.username LIKE CONCAT('%', #{articleAuthor}, '%') OR u.nickname LIKE CONCAT('%', #{articleAuthor}, '%'))
+            </if>
+        </where>
+    </select>
+    
+    <!-- 根据ID删除收藏记录 -->
+    <delete id="deleteById">
+        DELETE FROM article_favorite WHERE id = #{id}
+    </delete>
+    
+    <!-- 批量删除收藏记录 -->
+    <delete id="batchDeleteByIds">
+        DELETE FROM article_favorite
+        WHERE id IN
+        <foreach collection="favoriteIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
 
 </mapper>

@@ -15,6 +15,9 @@
 
 	<!-- 详细结果映射（包含用户信息） -->
 	<resultMap id="CommentDetailResultMap" type="com.hniu.mapu.pojo.entity.ArticleComment" extends="CommentResultMap">
+		<!-- 直接映射字段 -->
+		<result property="username" column="username"/>
+		<result property="articleTitle" column="article_title"/>
 		<!-- 用户信息 -->
 		<association property="user" javaType="com.hniu.mapu.pojo.entity.User">
 			<id property="id" column="user_id"/>
@@ -139,6 +142,39 @@
 				AND a.title LIKE CONCAT('%', #{articleTitle}, '%')
 			</if>
 		</where>
+	</select>
+
+	<!-- 根据ID更新评论 -->
+	<update id="updateById" parameterType="com.hniu.mapu.pojo.entity.ArticleComment">
+		UPDATE article_comment
+		SET content = #{content}
+		WHERE id = #{id}
+	</update>
+
+	<!-- 批量删除评论 -->
+	<delete id="batchDeleteByIds">
+		DELETE FROM article_comment
+		WHERE id IN
+		<foreach collection="commentIds" item="id" open="(" separator="," close=")">
+			#{id}
+		</foreach>
+	</delete>
+
+	<!-- 根据ID查询评论详情（包含用户名和文章标题） -->
+	<select id="selectByIdWithDetails" resultMap="CommentDetailResultMap">
+		SELECT 
+			ac.id,
+			ac.content,
+			ac.create_time,
+			ac.article_id,
+			ac.user_id,
+			ac.parent_id,
+			u.username,
+			a.title as article_title
+		FROM article_comment ac
+		LEFT JOIN user u ON ac.user_id = u.id
+		LEFT JOIN article a ON ac.article_id = a.id
+		WHERE ac.id = #{id}
 	</select>
 
 </mapper>

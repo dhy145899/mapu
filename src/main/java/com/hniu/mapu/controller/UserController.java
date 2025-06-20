@@ -110,18 +110,17 @@ public class UserController {
 		try {
 			User user = userService.login(username, password);
 			if (user != null) {
+				// 检查用户角色，管理员不能在普通用户界面登录
+				if (user.getRole() == 1) {
+					return Result.error("管理员账号请在管理员界面登录");
+				}
+				
 				session.setAttribute("userId", user.getId());
 				session.setAttribute("username", user.getNickname() != null && !user.getNickname().trim().isEmpty() ? user.getNickname() : user.getUsername());
 				session.setAttribute("userRole", user.getRole());
 				
-				// 根据用户角色返回不同的跳转信息
-			if (user.getRole() == 1) {
-				// 管理员用户，返回管理端跳转URL
-				return Result.success("/admin", "管理员登录成功");
-			} else {
-				// 普通用户，返回用户端跳转URL
+				// 普通用户登录成功
 				return Result.success("/", "登录成功");
-			}
 			} else {
 				return Result.error("用户名或密码错误");
 			}
@@ -191,6 +190,10 @@ public class UserController {
 		try {
 			boolean success = userService.updateUser(user);
 			if (success) {
+				// 更新session中的用户昵称
+				if (user.getNickname() != null && !user.getNickname().trim().isEmpty()) {
+					session.setAttribute("username", user.getNickname());
+				}
 				redirectAttributes.addFlashAttribute("success", "个人信息更新成功");
 			} else {
 				redirectAttributes.addFlashAttribute("error", "个人信息更新失败");

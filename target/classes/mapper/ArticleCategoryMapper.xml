@@ -88,4 +88,13 @@
         </where>
     </select>
 
+    <!-- 批量删除类别 -->
+    <delete id="batchDeleteByIds">
+        DELETE FROM article_category
+        WHERE id IN
+        <foreach collection="categoryIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
 </mapper>

@@ -15,9 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -175,8 +173,20 @@ public class ArticleServiceImpl implements ArticleService {
 	 * @return 删除结果
 	 */
 	@Override
+	@Transactional
 	public boolean deleteArticle(String id) {
 		log.info("删除文章，文章ID：{}", id);
+		
+		// 删除文章相关的评论
+		List<String> articleIds = Arrays.asList(id);
+		articleMapper.batchDeleteCommentsByArticleIds(articleIds);
+		log.info("删除文章相关评论，文章ID：{}", id);
+		
+		// 删除文章相关的收藏
+		articleMapper.batchDeleteFavoritesByArticleIds(articleIds);
+		log.info("删除文章相关收藏，文章ID：{}", id);
+		
+		// 删除文章
 		return articleMapper.deleteById(id) > 0;
 	}
 	
@@ -314,6 +324,16 @@ public class ArticleServiceImpl implements ArticleService {
 		return articleMapper.countByConditions(params);
 	}
 	
+	@Override
+	public long countByCategoryId(String categoryId) {
+		if (categoryId == null || categoryId.trim().isEmpty()) {
+			return 0;
+		}
+		Map<String, Object> params = new HashMap<>();
+		params.put("categoryId", categoryId);
+		return articleMapper.countByConditions(params);
+	}
+	
 	/**
 	 * 批量更新文章状态
 	 * @param articleIds 文章ID列表
@@ -363,6 +383,30 @@ public class ArticleServiceImpl implements ArticleService {
 		} catch (Exception e) {
 			log.error("批量删除文章失败", e);
 			return false;
+		}
+	}
+	
+	/**
+	 * 根据ID查询文章
+	 * @param id 文章ID
+	 * @return 文章信息
+	 */
+	@Override
+	public Article getArticleById(String id) {
+		log.info("根据ID查询文章，文章ID：{}", id);
+		
+		if (id == null || id.trim().isEmpty()) {
+			log.warn("文章ID为空");
+			return null;
+		}
+		
+		try {
+			Article article = articleMapper.selectById(id);
+			log.info("查询文章结果：{}", article != null ? "找到文章" : "文章不存在");
+			return article;
+		} catch (Exception e) {
+			log.error("根据ID查询文章失败，文章ID：{}", id, e);
+			return null;
 		}
 	}
 }

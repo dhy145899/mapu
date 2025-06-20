@@ -87,4 +87,19 @@ public interface UserMapper {
 	 * @return 用户数量
 	 */
 	long countByConditions(java.util.Map<String, Object> params);
+	
+	/**
+	 * 批量更新用户状态
+	 * @param userIds 用户ID列表
+	 * @param status 状态值
+	 * @return 影响行数
+	 */
+	int batchUpdateStatus(@Param("userIds") List<String> userIds, @Param("status") Integer status);
+	
+	/**
+	 * 批量删除用户
+	 * @param userIds 用户ID列表
+	 * @return 影响行数
+	 */
+	int batchDelete(@Param("userIds") List<String> userIds);
 }

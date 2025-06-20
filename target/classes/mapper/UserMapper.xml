@@ -142,4 +142,21 @@
         </where>
     </select>
 
+    <!-- 批量更新用户状态 -->
+    <update id="batchUpdateStatus">
+        UPDATE user SET is_enabled = #{status}, update_time = NOW()
+        WHERE id IN
+        <foreach collection="userIds" item="userId" open="(" separator="," close=")">
+            #{userId}
+        </foreach>
+    </update>
+
+    <!-- 批量删除用户 -->
+    <delete id="batchDelete">
+        DELETE FROM user WHERE id IN
+        <foreach collection="userIds" item="userId" open="(" separator="," close=")">
+            #{userId}
+        </foreach>
+    </delete>
+
 </mapper>

@@ -158,13 +158,55 @@ public class ArticleFavoriteServiceImpl implements ArticleFavoriteService {
 	}
 	
 	/**
-	 * 根据条件统计收藏数量
-	 * @param params 查询参数
-	 * @return 收藏数量
-	 */
-	@Override
-	public long countByConditions(java.util.Map<String, Object> params) {
-		log.info("根据条件统计收藏数量，参数：{}", params);
-		return favoriteMapper.countByConditions(params);
-	}
+     * 根据条件统计收藏数量
+     * @param params 查询参数
+     * @return 收藏数量
+     */
+    @Override
+    public long countByConditions(java.util.Map<String, Object> params) {
+        log.info("根据条件统计收藏数量，参数：{}", params);
+        return favoriteMapper.countByConditions(params);
+    }
+    
+    /**
+     * 根据ID删除收藏记录
+     * @param id 收藏ID
+     * @return 删除结果
+     */
+    @Override
+    public boolean deleteFavoriteById(String id) {
+        log.info("删除收藏记录，ID：{}", id);
+        
+        if (id == null || id.trim().isEmpty()) {
+            return false;
+        }
+        
+        try {
+            return favoriteMapper.deleteById(id) > 0;
+        } catch (Exception e) {
+            log.error("删除收藏记录失败，ID：{}", id, e);
+            return false;
+        }
+    }
+    
+    /**
+     * 批量删除收藏记录
+     * @param favoriteIds 收藏ID列表
+     * @return 删除结果
+     */
+    @Override
+    public boolean batchDeleteFavorites(List<String> favoriteIds) {
+        log.info("批量删除收藏记录，数量：{}", favoriteIds.size());
+        
+        if (favoriteIds == null || favoriteIds.isEmpty()) {
+            return false;
+        }
+        
+        try {
+            return favoriteMapper.batchDeleteByIds(favoriteIds) > 0;
+        } catch (Exception e) {
+            log.error("批量删除收藏记录失败", e);
+            return false;
+        }
+    }
 }
