@@ -2,6 +2,7 @@ package com.hniu.mapu.controller;
 
 import com.hniu.mapu.common.Result;
 import com.hniu.mapu.pojo.entity.*;
+import com.hniu.mapu.pojo.vo.ArticleVo;
 import com.hniu.mapu.service.*;
 import lombok.extern.slf4j.Slf4j;
 import jakarta.servlet.http.HttpSession;
@@ -288,7 +289,7 @@ public class AdminController {
 			
 			// 获取文章详情
 			String userId = (String) session.getAttribute("userId");
-			Article article = articleService.getArticleById(id);
+			ArticleVo article = articleService.getArticleDetail(id, userId);
 			
 			model.addAttribute("article", article);
 			

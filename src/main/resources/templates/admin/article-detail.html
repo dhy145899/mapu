@@ -46,11 +46,11 @@
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label class="form-label fw-bold">作者</label>
-                                        <div class="form-control-plaintext" th:text="${article.author?.username ?: 'N/A'}">作者名称</div>
+                                        <div class="form-control-plaintext" th:text="${article.authorName ?: 'N/A'}">作者名称</div>
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label fw-bold">类别</label>
-                                        <div class="form-control-plaintext" th:text="${article.category?.name ?: 'N/A'}">文章类别</div>
+                                        <div class="form-control-plaintext" th:text="${article.categoryName ?: 'N/A'}">文章类别</div>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
@@ -60,7 +60,7 @@
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label fw-bold">更新时间</label>
-                                        <div class="form-control-plaintext" th:text="${#temporals.format(article.updateTime, 'yyyy-MM-dd HH:mm:ss')}">更新时间</div>
+                                        <div class="form-control-plaintext" th:text="${article.updateTime != null ? #temporals.format(article.updateTime, 'yyyy-MM-dd HH:mm:ss') : 'N/A'}">更新时间</div>
                                     </div>
                                 </div>
                             </div>
@@ -74,33 +74,15 @@
                             <!-- 文章内容 -->
                             <div class="mb-4">
                                 <label class="form-label fw-bold">文章内容</label>
-                                <div class="border rounded p-3" style="min-height: 400px; background-color: #fff;" th:utext="${article.content}">文章内容</div>
+                                <div class="border rounded p-3" style="min-height: 400px; background-color: #fff; white-space: pre-wrap; word-wrap: break-word;" th:text="${article.content}">文章内容</div>
                             </div>
                             
                             <!-- 统计信息 -->
-                            <div class="row" th:if="${article.viewCount != null or article.likeCount != null or article.commentCount != null or article.favoriteCount != null}">
+                            <div class="row" th:if="${article.commentCount != null or article.favoriteCount != null}">
                                 <div class="col-md-12">
                                     <label class="form-label fw-bold">统计信息</label>
                                     <div class="row">
-                                        <div class="col-md-3" th:if="${article.viewCount != null}">
-                                            <div class="text-center p-3 border rounded">
-                                                <i class="bi bi-eye fs-4 text-primary"></i>
-                                                <div class="mt-2">
-                                                    <div class="fw-bold" th:text="${article.viewCount}">0</div>
-                                                    <small class="text-muted">浏览量</small>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-3" th:if="${article.likeCount != null}">
-                                            <div class="text-center p-3 border rounded">
-                                                <i class="bi bi-heart fs-4 text-danger"></i>
-                                                <div class="mt-2">
-                                                    <div class="fw-bold" th:text="${article.likeCount}">0</div>
-                                                    <small class="text-muted">点赞数</small>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-3" th:if="${article.commentCount != null}">
+                                        <div class="col-md-6" th:if="${article.commentCount != null}">
                                             <div class="text-center p-3 border rounded">
                                                 <i class="bi bi-chat fs-4 text-success"></i>
                                                 <div class="mt-2">
@@ -109,7 +91,7 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="col-md-3" th:if="${article.favoriteCount != null}">
+                                        <div class="col-md-6" th:if="${article.favoriteCount != null}">
                                             <div class="text-center p-3 border rounded">
                                                 <i class="bi bi-star fs-4 text-warning"></i>
                                                 <div class="mt-2">

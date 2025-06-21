@@ -93,6 +93,11 @@ public class ArticleVo {
 	private LocalDateTime createTime;
 	
 	/**
+	 * 更新时间
+	 */
+	private LocalDateTime updateTime;
+	
+	/**
 	 * 收藏时间
 	 */
 	private LocalDateTime favoriteTime;
